@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stock {
+  id               Int       @id @default(autoincrement())
+  symbol           String    @unique
+  lastPrice        Float
+  change           Float
+  pChange          Float
+  previousClose    Float
+  open             Float
+  close            Float
+  vwap             Float
+  intraDayHighLow  HighLow   @relation("IntraDayHighLow", fields: [intraDayHighLowId], references: [id])
+  intraDayHighLowId Int
+  weekHighLow      HighLow   @relation("WeekHighLow", fields: [weekHighLowId], references: [id])
+  weekHighLowId    Int
+  totalBuyQuantity Int
+  totalSellQuantity Int
+  deliveryQuantity Int
+  totalTradedVolume Int
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  investments      Investment[]
+  transactions     TransactionLog[]
+}
+
+model Investment {
+  id               Int      @id @default(autoincrement())
+  stock            Stock    @relation(fields: [stockId], references: [id])
+  stockId          Int
+  quantity         Int
+  investmentValue  Float
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model TransactionLog {
+  id               Int      @id @default(autoincrement())
+  stock            Stock    @relation(fields: [stockId], references: [id])
+  stockId          Int
+  action           Action
+  quantity         Int
+  price            Float
+  totalValue       Float
+  createdAt        DateTime @default(now())
+}
+
+enum Action {
+  BUY
+  SELL
+}
+
+model HighLow {
+  id       Int     @id @default(autoincrement())
+  min      Float
+  max      Float
+  stocks   Stock[] @relation(name: "IntraDayHighLow")
+  stocks2  Stock[] @relation(name: "WeekHighLow")
+}
